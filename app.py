@@ -46,6 +46,17 @@ def register():
 
         # ✅ Store data into database
         cursor = mysql.connection.cursor()
+        
+         # Check if user with same email already exists
+        cursor.execute("SELECT * FROM user WHERE email=%s", (email,))
+        existing_user = cursor.fetchone()
+
+        if existing_user:
+            flash('Email already registered. Please login.', 'danger')
+            cursor.close()
+            return redirect(url_for('register'))
+
+        # Insert new user
         cursor.execute(
             "INSERT INTO user (name, email, password) VALUES (%s, %s, %s)",
             (name, email, hashed_password)
