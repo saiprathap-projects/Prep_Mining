@@ -54,7 +54,7 @@ def register():
         if existing_user:
             flash('Email already registered. Please login.', 'danger')
             cursor.close()
-            return redirect(url_for('register'))
+            return redirect(url_for('login'))
 
         # Insert new user
         cursor.execute(
