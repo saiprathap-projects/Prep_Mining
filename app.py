@@ -28,7 +28,7 @@ class LoginForm(FlaskForm):
     submit = SubmitField("Register") 
 
 @app.route('/')
-def index():
+def idel():
     return "Welcome to Prep_Mining"
     
 @app.route('/Home')
