@@ -27,6 +27,10 @@ class LoginForm(FlaskForm):
     password = PasswordField("Password", validators=[DataRequired()])
     submit = SubmitField("Register") 
 
+@app.route('/')
+def index():
+    return "Welcome to Prep_Mining"
+    
 @app.route('/Home')
 def dashboard():
     return render_template('dashboard.html')
