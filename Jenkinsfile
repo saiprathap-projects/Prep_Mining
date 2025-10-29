@@ -9,7 +9,7 @@ pipeline {
         }
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'https://github.com/saiprathap-projects/flaskapp.git'
+                git branch: 'main', url: 'git@github.com:saiprathap-projects/Prep_Mining.git'
             }
         }
     }
