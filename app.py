@@ -4,14 +4,15 @@ from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Email, ValidationError
 import bcrypt
 from flask_mysqldb import MySQL
+import os
 
 app = Flask(__name__)
 
 # MySQL configuration
-app.config['MYSQL_HOST'] = '127.0.0.1'
-app.config['MYSQL_USER'] = 'flaskuser'
-app.config['MYSQL_PASSWORD'] = 'Sai@123456'
-app.config['MYSQL_DB'] = 'flaskapplication'
+app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST', 'localhost')
+app.config['MYSQL_USER'] = os.getenv('MYSQL_USER', 'root')
+app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD', '')
+app.config['MYSQL_DB'] = os.getenv('MYSQL_DB','flaskapplication')
 app.secret_key = 'your_secret_key_here'
 
 mysql = MySQL(app)
@@ -86,7 +87,7 @@ def login():
             "SELECT * FROM user WHERE email= %s", (email,))
         user = cursor.fetchone()
         cursor.close()
-        if user and bcrypt.checkpw(password.encode('utf-8'), user[3].encode('utf-8')):
+        if user and bcrypt.checkpw(password.encode('utf-8'), user[3]):
             session['user_id'] = user[0]
             return redirect(url_for('elements'))
         else:

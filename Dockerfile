@@ -1,20 +1,28 @@
-FROM ubuntu:latest
+FROM python:3.11-slim
 
+# Set working directory
 WORKDIR /app
 
-RUN  apt update -y && apt install -y \
-     python3 \
-     python3-pip \
-     python3-venv \
-     && rm -rf /var/lib/apt/lists/*
-     
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        gcc \
+        default-libmysqlclient-dev \
+        pkg-config \
+        mariadb-client && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
 COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY Prep_Mining /opt/Prep_Mining
+# Copy your app code to /app (NOT subfolder)
+COPY . .
 
-RUN python3 -m venv /venv
-ENV PATH="/venv/bin:$PATH"
-RUN pip install --upgrade pip && pip install -r requirements.txt
+# Stay in /app
+# WORKDIR /app  ← already set
 
 EXPOSE 5000
-CMD ["gunicorn", "--workers", "3", "--bind", "0.0.0.0:5000", "flaskapp.app:app"]
+
+# Gunicorn looks for app.py in current dir (/app)
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]

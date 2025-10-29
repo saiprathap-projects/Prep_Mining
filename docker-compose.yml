@@ -1,10 +1,22 @@
 version: '3.8'
 
 services:
-  # === MySQL Service ===
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=flaskuser
+      - MYSQL_PASSWORD=Sai@123456
+      - MYSQL_DB=flaskapplication
+    restart: on-failure
+
   mysql:
     image: mysql:8.0
-    container_name: mysql_db
     command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_ROOT_PASSWORD: root123
@@ -13,16 +25,16 @@ services:
       MYSQL_PASSWORD: Sai@123456
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # Optional: run on first start
-    ports:
-      - "3306:3306"
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql   # ← MUST BE THIS
+#    ports:
+#     - "3306:3306"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 10
 
-  # === Flask App ===
+# === Flask App ===
   app:
     build:
       context: .
