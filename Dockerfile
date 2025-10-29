@@ -25,4 +25,4 @@ COPY . .
 EXPOSE 5000
 
 # Gunicorn looks for app.py in current dir (/app)
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--timeout", "120", "app:app"]

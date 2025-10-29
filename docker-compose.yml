@@ -53,6 +53,18 @@ services:
     volumes:
       - .:/app
     command: gunicorn --bind 0.0.0.0:5000 app:app
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: nginx
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/prep.conf:/etc/nginx/conf.d/prep.conf
+      - ./static:/app/static
 
 volumes:
   mysql-data:
