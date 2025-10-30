@@ -1,12 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        AWS_REGION = 'us-east-1'
-        AWS_ACCOUNT_ID = '340752824368'
-        ECR_REPO = 'flaskapp'
-        KUBECONFIG = "${WORKSPACE}/config"
-    }
     stages {
         stage('Clean Workspace') {
             steps {
