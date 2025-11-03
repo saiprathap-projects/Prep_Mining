@@ -19,7 +19,7 @@ pipeline {
             }
             steps {
                withCredentials([usernamePassword(
-                   credentialsId: 'prep_mining',
+                   credentialsId: 'aws-credentials',
                    usernameVariable: 'AWS_ACCESS_KEY_ID',
                    passwordVariable: 'AWS_SECRET_ACCESS_KEY'
                )]) {
