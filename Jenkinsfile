@@ -13,32 +13,23 @@ pipeline {
             }
         }
         stage('Login to ECR') {
-           environment {
-               AWS_REGION = 'eu-north-1'               // Change as per your region
-               AWS_ACCOUNT_ID = '543855656055'         // Replace with your AWS account ID
+            environment {
+               AWS_REGION = 'eu-north-1'               
+               AWS_ACCOUNT_ID = '543855656055'         
             }
             steps {
-               withCredentials([usernamePassword(
-                   credentialsId: 'aws-credentials',
-                   usernameVariable: 'AWS_ACCESS_KEY_ID',
-                   passwordVariable: 'AWS_SECRET_ACCESS_KEY'
-               )]) {
-                   sh '''
-                       set -e
+                 withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}") {
+                  sh '''
+                      set -e
 
-                       echo "Configuring AWS CLI..."
-                       aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-                       aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-                       aws configure set region $AWS_REGION
-
-                       echo "Logging into Amazon ECR..."
-                       aws ecr get-login-password --region $AWS_REGION | \
-                       docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-
-                       echo "✅ Successfully logged into ECR."
-                     '''
-                    }
+                      echo "Logging into Amazon ECR..."
+                      aws ecr get-login-password --region $AWS_REGION | \
+                      docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+                      echo "✅ Successfully logged into ECR."
+                      
+                      '''
+                }
             }
-        }      
+        }    
     }
 }
