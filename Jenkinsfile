@@ -1,6 +1,10 @@
 pipeline {
     agent any
-
+    
+    environment {
+        AWS_REGION = 'eu-north-1'               
+        AWS_ACCOUNT_ID = '543855656055'         
+        }
     stages {
         stage('Clean Workspace') {
             steps {
@@ -13,10 +17,6 @@ pipeline {
             }
         }
         stage('Login to ECR') {
-            environment {
-               AWS_REGION = 'eu-north-1'               
-               AWS_ACCOUNT_ID = '543855656055'         
-            }
             steps {
                  withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}") {
                   sh '''
