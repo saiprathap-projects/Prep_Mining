@@ -11,8 +11,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                // Declarative checkout already happens automatically
-                // This ensures latest repo is available
+                // Ensures latest repo is available
                 checkout scm
             }
         }
@@ -44,10 +43,9 @@ pipeline {
                         } else {
                             echo "🚀 Running Terraform to create ECR repositories..."
 
-                            // ✅ Make sure this directory path matches your repo structure (case-sensitive)
+                            // ✅ Make sure this directory path matches your repo structure
                             dir('terraform') {
-                                sh '''
-                                    #!/bin/bash
+                                sh '''#!/bin/bash
                                     set -euxo pipefail
                                     terraform init -input=false
                                     terraform plan -out=tfplan
