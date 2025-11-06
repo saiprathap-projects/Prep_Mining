@@ -34,38 +34,31 @@ pipeline {
             }
         }
 
-        stage('Terraform - Create ECR') {
-            when {
-                expression {
-                    // Run Terraform only if at least one ECR repo is missing
-                    def appExists = sh(script: "aws ecr describe-repositories --repository-names prep_mining_app --region ${AWS_REGION}", returnStatus: true) == 0
-                    def nginxExists = sh(script: "aws ecr describe-repositories --repository-names prep_mining_nginx --region ${AWS_REGION}", returnStatus: true) == 0
-                    def mysqlExists = sh(script: "aws ecr describe-repositories --repository-names mysql --region ${AWS_REGION}", returnStatus: true) == 0
-                    return !(appExists && nginxExists && mysqlExists)
-                }
-            }
-            steps {
+        stage ('Terraform - Create ECR') {
+           steps {
                 withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}") {
-                    sh '''
-                        set -e
-                        echo "🚀 Starting Terraform to create ECR repositories..."
+                    script {
+                        def appExists = sh(script: "aws ecr describe-repositories --repository-names prep_mining_app --region ${AWS_REGION}", returnStatus: true) == 0
+                        def nginxExists = sh(script: "aws ecr describe-repositories --repository-names prep_mining_nginx --region ${AWS_REGION}", returnStatus: true) == 0
+                        def mysqlExists = sh(script: "aws ecr describe-repositories --repository-names mysql --region ${AWS_REGION}", returnStatus: true) == 0
 
-                        cd terraform/ECR
-
-                        echo "🔧 Initializing Terraform..."
-                        terraform init -input=false
-
-                        echo "🧩 Planning Terraform changes..."
-                        terraform plan -out=tfplan
-
-                        echo "🏗️ Applying Terraform changes..."
-                        terraform apply -auto-approve tfplan
-
-                        echo "✅ ECR repositories created or already exist."
-                    '''
+                        if (appExists && nginxExists && mysqlExists) {
+                            echo "✅ All ECR repositories already exist. Skipping Terraform."
+                        } else {
+                            echo "🚀 Running Terraform to create ECR repositories..."
+                            dir('terraform/ECR') {
+                                sh '''
+                                    set -euxo pipefail
+                                    terraform init -input=false
+                                    terraform plan -out=tfplan
+                                    terraform apply -auto-approve tfplan
+                                '''
+                            }
+                        }
+                   }
                 }
-            }
-        }
+           }  
+        } 
 
         stage('Build Docker Image') {
             steps {
