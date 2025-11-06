@@ -44,11 +44,8 @@ pipeline {
                 }
             }
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'aws-credentials',
-                    usernameVariable: 'AWS_ACCESS_KEY_ID',
-                    passwordVariable: 'AWS_SECRET_ACCESS_KEY'
-                )]) {
+                withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}")
+                  {
                     script {
                         sh '''
                             set -e
