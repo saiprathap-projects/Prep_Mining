@@ -47,8 +47,7 @@ pipeline {
                             // ✅ Make sure this directory path matches your repo structure (case-sensitive)
                             dir('terraform') {
                                 sh '''
-                                    #!/bin/bash
-                                    set -euxo pipefail
+                                    set -euxo 
                                     terraform init -input=false
                                     terraform plan -out=tfplan
                                     terraform apply -auto-approve tfplan
