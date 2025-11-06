@@ -4,19 +4,16 @@ pipeline {
     environment {
         AWS_REGION = 'eu-north-1'
         AWS_ACCOUNT_ID = '543855656055'
+        ECR_URL = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
     }
 
     stages {
 
-        stage('Clean Workspace') {
+        stage('Checkout') {
             steps {
-                deleteDir()
-            }
-        }
-
-        stage('Clone Repository') {
-            steps {
-                git branch: 'main', url: 'git@github.com:saiprathap-projects/Prep_Mining.git'
+                // Declarative checkout already happens automatically
+                // This ensures latest repo is available
+                checkout scm
             }
         }
 
@@ -26,16 +23,16 @@ pipeline {
                     sh '''
                         set -e
                         echo "🔐 Logging into Amazon ECR..."
-                        aws ecr get-login-password --region $AWS_REGION | \
-                        docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+                        aws sts get-caller-identity
+                        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
                         echo "✅ Successfully logged into ECR."
                     '''
                 }
             }
         }
 
-        stage ('Terraform - Create ECR') {
-           steps {
+        stage('Terraform - Create ECR') {
+            steps {
                 withAWS(credentials: 'aws-credentials', region: "${AWS_REGION}") {
                     script {
                         def appExists = sh(script: "aws ecr describe-repositories --repository-names prep_mining_app --region ${AWS_REGION}", returnStatus: true) == 0
@@ -46,6 +43,8 @@ pipeline {
                             echo "✅ All ECR repositories already exist. Skipping Terraform."
                         } else {
                             echo "🚀 Running Terraform to create ECR repositories..."
+
+                            // ✅ Make sure this directory path matches your repo structure (case-sensitive)
                             dir('terraform') {
                                 sh '''
                                     set -euxo pipefail
@@ -55,27 +54,24 @@ pipeline {
                                 '''
                             }
                         }
-                   }
+                    }
                 }
-           }  
-        } 
+            }
+        }
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    sh '''
-                        cd $WORKSPACE
-                        docker compose version
-                        docker compose build --no-cache
-                    '''
-                }
+                sh '''
+                    echo "🏗️ Building Docker images..."
+                    docker compose version
+                    docker compose build --no-cache
+                '''
             }
         }
 
         stage('Tag & Push image to ECR') {
             steps {
                 script {
-                    def ecrUrl = "${env.AWS_ACCOUNT_ID}.dkr.ecr.${env.AWS_REGION}.amazonaws.com"
                     def commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
                     def versionTag = "v${env.BUILD_NUMBER}-${commitId}"
 
@@ -86,13 +82,12 @@ pipeline {
                     ]
 
                     images.each { localName, repoName ->
-                        def localImage = "${localName}:latest"
-                        def latestTag = "${ecrUrl}/${repoName}:latest"
-                        def versionedTag = "${ecrUrl}/${repoName}:${versionTag}"
+                        def latestTag = "${ECR_URL}/${repoName}:latest"
+                        def versionedTag = "${ECR_URL}/${repoName}:${versionTag}"
 
                         sh """
-                            docker tag ${localImage} ${latestTag}
-                            docker tag ${localImage} ${versionedTag}
+                            docker tag ${localName}:latest ${latestTag}
+                            docker tag ${localName}:latest ${versionedTag}
                             docker push ${latestTag}
                             docker push ${versionedTag}
                             echo "✅ Successfully pushed ${repoName} to ECR."
