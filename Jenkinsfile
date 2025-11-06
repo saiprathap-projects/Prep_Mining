@@ -48,7 +48,7 @@ pipeline {
                             dir('terraform') {
                                 sh '''
                                     #!/bin/bash
-                                    set -euxo pipefail 
+                                    set -euxo pipefail
                                     terraform init -input=false
                                     terraform plan -out=tfplan
                                     terraform apply -auto-approve tfplan
