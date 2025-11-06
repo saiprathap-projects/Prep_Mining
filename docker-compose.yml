@@ -1,22 +1,10 @@
 version: '3.8'
 
 services:
-  app:
-    build: .
-    ports:
-      - "5000:5000"
-    depends_on:
-      mysql:
-        condition: service_healthy
-    environment:
-      - MYSQL_HOST=mysql
-      - MYSQL_USER=flaskuser
-      - MYSQL_PASSWORD=Sai@123456
-      - MYSQL_DB=flaskapplication
-    restart: on-failure
-
+  # === MySQL Database ===
   mysql:
     image: mysql:8.0
+    container_name: mysql
     command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_ROOT_PASSWORD: root123
@@ -25,17 +13,16 @@ services:
       MYSQL_PASSWORD: Sai@123456
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql   # ← MUST BE THIS
-#    ports:
-#     - "3306:3306"
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 10
+    restart: always
 
-# === Flask App ===
-  app:
+  # === Flask App ===
+  prep_mining_app:
     build:
       context: .
       dockerfile: Dockerfile
@@ -53,18 +40,23 @@ services:
     volumes:
       - .:/app
     command: gunicorn --bind 0.0.0.0:5000 app:app
-  nginx:
+    restart: on-failure
+
+  # === Nginx Reverse Proxy ===
+  prep_mining_nginx:
     build:
       context: ./nginx
       dockerfile: Dockerfile
-    container_name: nginx
+    container_name: prep_mining_nginx
     depends_on:
-      - app
+      - prep_mining_app
     ports:
       - "80:80"
     volumes:
       - ./nginx/prep.conf:/etc/nginx/conf.d/prep.conf
       - ./static:/app/static
+    restart: always
 
+# === Persistent Volume for MySQL ===
 volumes:
   mysql-data:
