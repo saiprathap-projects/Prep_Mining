@@ -47,6 +47,7 @@ pipeline {
                             // ✅ Make sure this directory path matches your repo structure (case-sensitive)
                             dir('terraform') {
                                 sh '''
+                                    #!/bin/bash
                                     set -euxo pipefail
                                     terraform init -input=false
                                     terraform plan -out=tfplan
