@@ -46,7 +46,7 @@ pipeline {
                             echo "✅ All ECR repositories already exist. Skipping Terraform."
                         } else {
                             echo "🚀 Running Terraform to create ECR repositories..."
-                            dir('terraform/ECR') {
+                            dir('terraform') {
                                 sh '''
                                     set -euxo pipefail
                                     terraform init -input=false
