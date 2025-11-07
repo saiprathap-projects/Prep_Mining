@@ -77,7 +77,7 @@ pipeline {
                     def images = [
                         'prep_mining_app'  : 'prep_mining_app',
                         'prep_mining_nginx': 'prep_mining_nginx',
-                        'mysql'            : 'mysql'
+                        'mysql::8.0'            : 'mysql'
                     ]
 
                     images.each { localName, repoName ->
